@@ -21,36 +21,29 @@ return {
     }
 
     require("mason").setup()
-    require("mason-lspconfig").setup({
-      ensure_installed = languages,
-    })
+    require("mason-lspconfig").setup({ ensure_installed = languages })
 
     local capabilities = require("blink.cmp").get_lsp_capabilities()
 
     for i = 1, #languages do
       vim.lsp.config(languages[i], { capabilities = capabilities })
+      vim.lsp.enable(languages[i])
     end
 
-    -- Keymaps for LSP
     vim.api.nvim_create_autocmd("LspAttach", {
       callback = function(event)
-        local builtin = require "telescope.builtin"
+        local map = function(keys, func, desc)
+          vim.keymap.set("n", keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
+        end
 
-        require "config.telescope"
-
-        vim.keymap.set("n", "gd", builtin.lsp_definitions, { buffer = 0 })
-        vim.keymap.set("n", "gr", builtin.lsp_references, { buffer = 0 })
-
-        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { buffer = 0 })
-        vim.keymap.set("n", "gT", vim.lsp.buf.type_definition, { buffer = 0 })
-        vim.keymap.set("n", "gh", vim.lsp.buf.hover, { buffer = 0 })
-
-        vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = 0 })
-        vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = 0 })
+        map("gd", vim.lsp.buf.definition, 'Goto Definition')
+        map("gr", vim.lsp.buf.references, 'Goto References')
+        map("gh", vim.lsp.buf.hover, 'Hover Documentation')
+        map("<leader>rn", vim.lsp.buf.rename, 'Rename')
+        map("<leader>ca", vim.lsp.buf.code_action, 'Code Action')
       end,
     })
 
-    -- Inline errors and warnings
     vim.diagnostic.config({
       virtual_text = {
         prefix = "*",
